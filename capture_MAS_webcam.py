@@ -17,14 +17,14 @@ def get_img_write_webcam(cam, path , img_name, interval=5):
         print("frame not get properly")
         return None
     
-    img_path = "{}.png".format(os.path.join(path,img_name))
+    img_path = "{}.jpg".format(os.path.join(path,img_name))
     if Debug: print("current writing to", img_path)
     cv2.imwrite(img_path, frame)
     
     if Dbwrite:
         if Debug : print("current writing to DB with ", img_path)
         conn.execute("insert into images (name,time_folder) \
-                      values ({},'{}')".format(img_name,path));
+                      values ('{}','{}')".format(img_name+'.jpg',path));
         conn.commit()
     time.sleep(interval)
 
