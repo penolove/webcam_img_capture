@@ -1,2 +1,3 @@
 rm -rf target;
-rm test.db;
+rm webcam.db;
+rm yolo.db;
