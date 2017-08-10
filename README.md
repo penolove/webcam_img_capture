@@ -8,4 +8,8 @@ capture_img_duration.py
 ./sqlite.sh 
 
 # Monitor and Summary , saving images to target folder from web cam 
-pytho capture_MAS.py target
+python capture_MAS_webcam.py target
+
+## my home DVR example
+
+python capture_MAS_DVR.py target
