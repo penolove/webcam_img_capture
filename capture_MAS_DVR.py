@@ -6,6 +6,7 @@ import subprocess
 from datetime import datetime
 import requests
 import shutil
+from oslo.config import cfg
 Debug = True
 
 Dbwrite = True
@@ -55,17 +56,32 @@ def post_yolo(prefix,min_path):
     dir_queue.insert(0,min_path)
     if len(dir_queue)>1:
         try:
-            dir_path = dir_queue.pop()                                                                 
+            dir_path = dir_queue.pop()
             r = requests.post("http://localhost:5566/home", data='{"dir_path": "'+prefix+dir_path+'"}')
         except Exception as e:        
             print("====[file monitor] post somewhat fails===") 
             print(e)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("usage : python capture_SAM.py target_dir")
-        sys.exit()
-    _, target_dir = sys.argv
+    if len(sys.argv) == 2:
+        _, target_dir = sys.argv
+    else:
+        print("usage : python capture_SAM.py target_dir, if not given using conf setting")
+        
+        # using the conf setting
+        opt_morestuff_group = cfg.OptGroup(name='morestuff',
+                                 title='A More Complex Example')
+        morestuff_opts = [
+            cfg.StrOpt('img_path', default='No data',
+                       help=('setting for image path')),
+        ]
+     
+        CONF = cfg.CONF
+        CONF.register_group(opt_morestuff_group)
+        CONF.register_opts(morestuff_opts, opt_morestuff_group)
+        CONF(default_config_files=['app.conf'])
+        target_dir = CONF.morestuff.img_path
+
 
     # create/check Folder A : target dir to monitor, contain lots of folder B(date)
     check_path_create(target_dir)
