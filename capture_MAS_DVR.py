@@ -15,33 +15,29 @@ if Dbwrite:
     conn = sqlite3.connect('webcam.db')
 
 sess = requests.Session()
-def get_img_write_DVR(path , img_name_, interval=5):
+def get_img_write_DVR(path , img_name_, interval=8):
     for ch in range(8):
         img_name = img_name_+"_"+str(ch)
         img_path = "{}.jpg".format(os.path.join(path,img_name))
         if Debug: print("current writing to", img_path)
+        try:
+            resp = sess.get('http://192.168.1.110/cgi-bin/web_jpg.cgi?ch='+str(ch)\
+                    ,auth=('admin','123456'), stream=True) 
 
-        resp = sess.get('http://192.168.1.110/cgi-bin/web_jpg.cgi?ch='+str(ch)\
-                ,auth=('admin','123456'), stream=True) 
+            if resp.status_code == 200:
+                with open(img_path, 'wb') as f:
+                    resp.raw.decode_content = True
+                    shutil.copyfileobj(resp.raw, f) 
+            else:
+                print("connection err due to ", resp.status_code)
 
-        if resp.status_code == 200:
-            with open(img_path, 'wb') as f:
-                resp.raw.decode_content = True
-                shutil.copyfileobj(resp.raw, f) 
-        else:
-            print("connection err due to ", resp.status_code)
-
-        # using wget but will somewhat fail fater few times 
-        #  p = subprocess.Popen(['wget','-O',img_path,'--user=admin','--password=123456',\
-        #  'http://192.168.1.110/cgi-bin/web_jpg.cgi?ch='+str(ch)])
-        #  os.waitpid(p.pid,0)
-
-        if Dbwrite:
-            if Debug : print("current writing to DB with ", img_path)
-            conn.execute("insert into images (name,time_folder) \
-                          values ('{}','{}')".format(img_name+'.jpg',path));
-            conn.commit()
-
+            if Dbwrite:
+                if Debug : print("current writing to DB with ", img_path)
+                conn.execute("insert into images (name,time_folder) \
+                              values ('{}','{}')".format(img_name+'.jpg',path));
+                conn.commit()
+        except Exception as e:
+            print(e)
     time.sleep(interval)
 
 def check_path_create(target_dir):
@@ -65,6 +61,8 @@ def post_yolo(prefix,min_path):
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         _, target_dir = sys.argv
+        capture_interval_common = 8
+        capture_interval_night = 16
     else:
         print("usage : python capture_SAM.py target_dir, if not given using conf setting")
         
@@ -74,6 +72,10 @@ if __name__ == '__main__':
         morestuff_opts = [
             cfg.StrOpt('img_path', default='No data',
                        help=('setting for image path')),
+            cfg.IntOpt('capture_interval_common', default=8,
+                                help=('Default capture interval ')),
+            cfg.IntOpt('capture_interval_night', default=16,
+                                help=('Default capture interval ')),
         ]
      
         CONF = cfg.CONF
@@ -81,6 +83,9 @@ if __name__ == '__main__':
         CONF.register_opts(morestuff_opts, opt_morestuff_group)
         CONF(default_config_files=['app.conf'])
         target_dir = CONF.morestuff.img_path
+        target_dir = CONF.morestuff.img_path
+        capture_interval_common = CONF.morestuff.capture_interval_common
+        capture_interval_night = CONF.morestuff.capture_interval_night
 
 
     # create/check Folder A : target dir to monitor, contain lots of folder B(date)
@@ -97,6 +102,7 @@ if __name__ == '__main__':
         # create folder C for different hour
         hour_path = os.path.join(date_path,current_time.strftime("%H"))
         check_path_create(hour_path)
+        current_hour = int(current_time.strftime("%H"))
         # create folder D for each ten minutes
         min_path = os.path.join(hour_path,current_time.strftime("%M"))
         min_created = check_path_create(min_path)
@@ -107,10 +113,14 @@ if __name__ == '__main__':
 
         # capture images for each interval(default 5s)
         img_name = current_time.strftime("%S")
+        if 5<= current_hour <= 19 :
+            capture_interval = capture_interval_common
+        else:
+            capture_interval = capture_interval_night
 
         ##########################
         # write to images DVR #
-        get_img_write_DVR(min_path, img_name)
+        get_img_write_DVR(min_path, img_name,capture_interval)
         ##########################
 
     cam.release()

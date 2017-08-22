@@ -49,6 +49,8 @@ def post_yolo(prefix,min_path):
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         , target_dir = sys.argv
+        capture_interval_common = 8
+        capture_interval_night = 16
     else:
         print("usage : python capture_SAM.py target_dir, if not given using conf setting")
         
@@ -58,6 +60,10 @@ if __name__ == '__main__':
         morestuff_opts = [
             cfg.StrOpt('img_path', default='No data',
                        help=('setting for image path')),
+            cfg.IntOpt('capture_interval_common', default=8,
+                                help=('Default capture interval ')),
+            cfg.IntOpt('capture_interval_night', default=16,
+                                help=('Default capture interval ')),
         ]
      
         CONF = cfg.CONF
@@ -65,6 +71,10 @@ if __name__ == '__main__':
         CONF.register_opts(morestuff_opts, opt_morestuff_group)
         CONF(default_config_files=['app.conf'])
         target_dir = CONF.morestuff.img_path
+        target_dir = CONF.morestuff.img_path
+        capture_interval_common = CONF.morestuff.capture_interval_common
+        capture_interval_night = CONF.morestuff.capture_interval_night
+        
 
     # create/check Folder A : target dir to monitor, contain lots of folder B(date)
     check_path_create(target_dir)
@@ -81,6 +91,7 @@ if __name__ == '__main__':
         # create folder C for different hour
         hour_path = os.path.join(date_path,current_time.strftime("%H"))
         check_path_create(hour_path)
+        current_hour = int(current_time.strftime("%H"))
         # create folder D for each ten minutes
         min_path = os.path.join(hour_path,current_time.strftime("%M"))
         min_created = check_path_create(min_path)
@@ -92,9 +103,14 @@ if __name__ == '__main__':
         # capture images for each interval(default 5s)
         img_name = current_time.strftime("%S")
 
+        if 5<= current_hour <= 19 :
+            capture_interval = capture_interval_common
+        else:
+            capture_interval = capture_interval_night
+
         ##########################
-        # write to images webcam #
-        get_img_write_webcam(cam, min_path, img_name)
+        # write to images DVR #
+        get_img_write_DVR(min_path, img_name,capture_interval)
         ##########################
 
     cam.release()

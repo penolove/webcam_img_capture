@@ -13,6 +13,11 @@ require oslo.config with
 
 and put your setting in app.conf (cate list, target path to save images)
 (the category list can't be in two lines, due to some django issues)
+app.conf :
+- cate list: category to monitor
+- target path: saving image
+- capture interval: 8s in common(5:00~19:00) , 16s in night(24:00-5:00)
+
 
 # clean files first
 ./clean_data.sh
@@ -22,6 +27,9 @@ and put your setting in app.conf (cate list, target path to save images)
 # Monitor and Summary , saving images to target folder from web cam 
 python capture_MAS_webcam.py [target]
 
-## my home DVR example
-
+## my home DVR example 
 python capture_MAS_DVR.py [target]
+
+
+
+
