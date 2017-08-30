@@ -4,6 +4,7 @@ import cv2
 import time
 from datetime import datetime
 import requests
+from oslo.config import cfg
 Debug = True
 
 Dbwrite = True
@@ -47,8 +48,8 @@ def post_yolo(prefix,min_path):
             print(e)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        , target_dir = sys.argv
+    if len(sys.argv) == 2:
+        _,target_dir = sys.argv
         capture_interval_common = 8
         capture_interval_night = 16
     else:
@@ -109,8 +110,8 @@ if __name__ == '__main__':
             capture_interval = capture_interval_night
 
         ##########################
-        # write to images DVR #
-        get_img_write_DVR(min_path, img_name,capture_interval)
+        # write to images webcam #
+        get_img_write_webcam(cam,min_path, img_name,capture_interval)
         ##########################
 
     cam.release()
