@@ -123,6 +123,3 @@ if __name__ == '__main__':
         get_img_write_DVR(min_path, img_name,capture_interval)
         ##########################
 
-    cam.release()
-    cv2.destroyAllWindows()
-
