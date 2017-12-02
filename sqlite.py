@@ -1,5 +1,6 @@
 import sqlite3
 from oslo.config import cfg
+import pickle
 
 # reading setting
 opt_morestuff_group = cfg.OptGroup(name='morestuff',
@@ -46,40 +47,41 @@ def create_table(conn, create_table_sql):
 
 
 def main():
-    category = CONF.morestuff.category 
-    print(category)
+    categories = CONF.morestuff.category
+    pickle.dump(categories, open("Currnet_cate.pkl", "wb"))
+    print(categories)
     database = "yolo.db"
 
     # Images_det table
-    sql_create_tasks_table = """CREATE TABLE Images_det( 
+    sql_query_create_tasks_table = """CREATE TABLE Images_det(
        NAME           TEXT    NOT NULL,
        TIME_Folder    TEXT    NOT NULL,"""
-    for i in range(len(category)):
-        sql_create_tasks_table+= "CATE_"+str(i+1)+"         INT     DEFAULT 0"
-        if (i+1)!=len(category):
-            sql_create_tasks_table+=","
-        sql_create_tasks_table+="\n"
-    sql_create_tasks_table+=");"
+    for i, cate in enumerate(categories):
+        sql_query_create_tasks_table += cate+"         INT     DEFAULT 0"
+        if (i+1) != len(categories):
+            sql_query_create_tasks_table += ","
+        sql_query_create_tasks_table += "\n"
+    sql_query_create_tasks_table += ");"
 
     # minute_det table
-    sql_create_min_table = """CREATE TABLE minute_det( 
+    sql_query_create_min_table = """CREATE TABLE minute_det(
        TIME_Folder    TEXT    NOT NULL,"""
-    for i in range(len(category)):
-        sql_create_min_table+= """CATE_"""+str(i+1)+"""         INT     DEFAULT 0"""
-        if (i+1)!=len(category):
-            sql_create_min_table+=""","""
-        sql_create_tasks_table+="\n"
-    sql_create_min_table+=""");"""
+    for i, cate in enumerate(categories):
+        sql_query_create_min_table += cate+"         INT     DEFAULT 0"
+        if (i+1) != len(categories):
+            sql_query_create_min_table += ","
+        sql_query_create_tasks_table += "\n"
+    sql_query_create_min_table += ");"
 
     # create a database connection
     conn = create_connection(database)
     if conn is not None:
         # create Image_det table
-        create_table(conn, sql_create_tasks_table)
+        create_table(conn, sql_query_create_tasks_table)
         # create minute_det table
-        create_table(conn, sql_create_min_table)
+        create_table(conn, sql_query_create_min_table)
     else:
         print("Error! cannot create the database connection.")
 
 if __name__ == '__main__':
-        main()
+    main()
